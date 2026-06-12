@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0004 |
-| **Status** | In Progress |
+| **Status** | Done |
 | **Branch** | `feature/streak-freeze-manager` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -54,7 +54,7 @@ The goal is to implement **`StreakFreezeManager`** as described in low-level blu
 
 ## 3. Phases
 
-### Phase 1 — Streak Freeze Manager Core Logic · Status: Pending
+### Phase 1 — Streak Freeze Manager Core Logic · Status: Done
 - **Does:** Implement `StreakFreezeManager` under package `com.lockedin.engine`.
 - **Verify:** Compile class and check structure.
 - **Changed files:**
@@ -63,7 +63,7 @@ The goal is to implement **`StreakFreezeManager`** as described in low-level blu
   |---|---|
   | `src/main/java/com/lockedin/engine/StreakFreezeManager.java` | Main transaction worker applying atomic freezes (new) |
 
-### Phase 2 — Mock Transaction Verification Testing · Status: Pending
+### Phase 2 — Mock Transaction Verification Testing · Status: Done
 - **Does:** Write unit tests using JUnit & Mockito mocking JDBC interfaces (`DataSource`, `Connection`, `PreparedStatement`, `ResultSet`) to assert transactions commit or rollback correctly.
 - **Verify:** Run Maven test suite and check all tests pass.
 - **Changed files:**
