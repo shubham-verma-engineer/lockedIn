@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0006 |
-| **Status** | In Progress |
+| **Status** | Completed |
 | **Branch** | `feature/spring-boot-bootstrap` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -48,39 +48,39 @@ The goal is to assemble the individual Java components (`MotivationEngineRouter`
 
 ## 3. Phases
 
-### Phase 1 — Build Configuration & Database Schema · Status: Pending
+### Phase 1 — Build Configuration & Database Schema · Status: Done
 - **Does:** Upgrade `pom.xml` and `build.gradle` with Spring Boot starters. Create `schema.sql`.
 - **Verify:** Build the project without compile errors.
 - **Changed files:**
 
   | File | Brief |
   |---|---|
-  | `pom.xml` | Added Spring Boot parent, starter, and database dependencies [MODIFIED] |
-  | `build.gradle` | Added Spring Boot plugins and dependencies [MODIFIED] |
-  | `src/main/resources/schema.sql` | PostgreSQL initialization DDL schema script [NEW] |
+  | `pom.xml` | Added Spring Boot parent, starter, and database dependencies (modified) |
+  | `build.gradle` | Added Spring Boot plugins and dependencies (modified) |
+  | `src/main/resources/schema.sql` | PostgreSQL initialization DDL schema script (new) |
 
-### Phase 2 — Core Bootstrapping & DI Configuration · Status: Pending
+### Phase 2 — Core Bootstrapping & DI Configuration · Status: Done
 - **Does:** Create the main application starter class and DI configuration.
 - **Verify:** Run compile and verify no compilation errors.
 - **Changed files:**
 
   | File | Brief |
   |---|---|
-  | `src/main/java/com/lockedin/LockedInApplication.java` | Main Spring Boot application class [NEW] |
-  | `src/main/java/com/lockedin/config/AppConfig.java` | DI bean declarations for motivation engine, router, and timezone evaluators [NEW] |
-  | `src/main/resources/application.properties` | Local dev configuration property file [NEW] |
+  | `src/main/java/com/lockedin/LockedInApplication.java` | Main Spring Boot application class (new) |
+  | `src/main/java/com/lockedin/config/AppConfig.java` | DI bean declarations for motivation engine, router, and timezone evaluators (new) |
+  | `src/main/resources/application.properties` | Local dev configuration property file (new) |
 
-### Phase 3 — HTTP Controllers & Cron Scheduling · Status: Pending
+### Phase 3 — HTTP Controllers & Cron Scheduling · Status: Done
 - **Does:** Implement the REST controller (`LockedInController`) and the background scheduler trigger.
 - **Verify:** REST controller endpoints compile correctly.
 - **Changed files:**
 
   | File | Brief |
   |---|---|
-  | `src/main/java/com/lockedin/controller/LockedInController.java` | HTTP endpoints for check-ins, freezes, and motivation [NEW] |
-  | `src/main/java/com/lockedin/scheduler/SpringSchedulerWrapper.java` | Scans and executes MinutePoll background tasks using @Scheduled [NEW] |
+  | `src/main/java/com/lockedin/controller/LockedInController.java` | HTTP endpoints for check-ins, freezes, and motivation (new) |
+  | `src/main/java/com/lockedin/scheduler/SpringSchedulerWrapper.java` | Scans and executes MinutePoll background tasks using @Scheduled (new) |
 
-### Phase 4 — Integration Testing · Status: Pending
+### Phase 4 — Integration Testing · Status: Done
 - **Does:** Create a Spring Boot integration test suite to verify endpoints and database logic.
 - **Verify:** Run Maven test suite successfully.
 - **Changed files:**
