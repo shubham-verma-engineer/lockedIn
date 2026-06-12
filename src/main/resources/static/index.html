@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LockedIn | Habit Tracking & Accountability</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg-primary: #090d16;
+            --color-bg-secondary: #111827;
+            --color-text-primary: #f3f4f6;
+            --color-text-muted: #9ca3af;
+            --color-state-active: #00ffcc;
+            --color-state-warning: #ffcc00;
+            --color-state-critical: #ff3366;
+            --color-state-frozen: #77b5fe;
+            --glass-bg: rgba(17, 24, 39, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--color-bg-primary);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(0, 255, 204, 0.05) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(255, 51, 102, 0.05) 0px, transparent 50%);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #00ffcc, #ff3366);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-badge.frozen {
+            color: var(--color-state-frozen);
+            border-color: rgba(119, 181, 254, 0.3);
+        }
+
+        .stat-badge.active {
+            color: var(--color-state-active);
+            border-color: rgba(0, 255, 204, 0.3);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            border-left: 4px solid var(--color-state-active);
+            padding-left: 0.75rem;
+        }
+
+        .habit-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .habit-card:hover {
+            transform: translateX(4px);
+            border-color: rgba(0, 255, 204, 0.3);
+        }
+
+        .habit-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .habit-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .habit-anchor {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            font-style: italic;
+        }
+
+        .habit-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .streak-count {
+            text-align: right;
+        }
+
+        .streak-num {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--color-state-active);
+        }
+
+        .streak-label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            background: var(--color-state-active);
+            color: #000;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 204, 0.2);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        button.critical {
+            background: var(--color-state-critical);
+            color: white;
+        }
+
+        button.critical:hover {
+            box-shadow: 0 4px 12px rgba(255, 51, 102, 0.2);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--color-state-active);
+        }
+
+        .console {
+            background: #02040a;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            height: 250px;
+            overflow-y: auto;
+            color: #39ff14;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .console-entry {
+            line-height: 1.4;
+        }
+
+        .console-time {
+            color: #888;
+        }
+
+        .audio-player-card {
+            display: none;
+            background: rgba(119, 181, 254, 0.05);
+            border: 1px solid rgba(119, 181, 254, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        audio {
+            width: 100%;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LockedIn Dashboard</h1>
+            <div class="header-stats">
+                <div class="stat-badge active">
+                    ⚡ Server Status: Online
+                </div>
+                <div class="stat-badge frozen">
+                    🛡️ Port: 8082
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Left Side: Interactive Actions & Forms -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- Configure Habit Card -->
+                <div class="card">
+                    <h2>Configure Habit Streak</h2>
+                    <form id="streakForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Streak ID</label>
+                            <input type="text" id="streakId" value="streak-101" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Account ID</label>
+                            <input type="text" id="accountId" value="account-101" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Habit Name</label>
+                            <input type="text" id="activity" value="Daily Coding" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Target Time</label>
+                            <input type="text" id="scheduledTime" value="08:00:00" placeholder="HH:MM:SS" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Timezone (IANA)</label>
+                            <select id="timezone">
+                                <option value="America/New_York">America/New_York</option>
+                                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                                <option value="UTC">UTC</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Emotional Anchor (Reason to not fail)</label>
+                            <textarea id="anchor" rows="2" required>No excuses. If I stop coding, I stop growing.</textarea>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Voice Archetype</label>
+                            <select id="archetype">
+                                <option value="STRICT">STRICT (Assertive, tough love)</option>
+                                <option value="PROFESSIONAL">PROFESSIONAL (Polite, milestone-driven)</option>
+                                <option value="CASUAL">CASUAL (Gen-Z slang pressure)</option>
+                                <option value="18+ ABUSIVE">18+ ABUSIVE (Intense call-outs)</option>
+                            </select>
+                        </div>
+                        <button type="submit" style="grid-column: span 2;">Save Habit Configuration</button>
+                    </form>
+                </div>
+
+                <!-- Check-in & Sync Card -->
+                <div class="card">
+                    <h2>Simulate User Check-Ins & Syncs</h2>
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        
+                        <!-- Core Manual Check-in -->
+                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+                            <h3 style="font-size: 1rem; color: var(--color-state-active);">⚡ Manual Check-in (Timezone Grace Period)</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label>UTC Timestamp</label>
+                                    <input type="text" id="checkinTime" value="2026-06-16T08:30:00Z" placeholder="YYYY-MM-DDTHH:MM:SSZ">
+                                </div>
+                                <div class="form-group">
+                                    <label>Timezone</label>
+                                    <input type="text" id="checkinTz" value="America/Los_Angeles">
+                                </div>
+                            </div>
+                            <button onclick="triggerManualCheckin()">Log Manual Check-in</button>
+                        </div>
+
+                        <!-- Smartwatch Health Sync -->
+                        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+                            <h3 style="font-size: 1rem; color: var(--color-state-frozen);">⌚ Smartwatch Ingestion Sync</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label>Steps Count</label>
+                                    <input type="number" id="syncSteps" value="6500">
+                                </div>
+                                <div class="form-group">
+                                    <label>Sleep Minutes</label>
+                                    <input type="number" id="syncSleep" value="420">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label>Sync Timestamp (UTC)</label>
+                                    <input type="text" id="syncTime" value="2026-06-16T08:30:00Z">
+                                </div>
+                            </div>
+                            <button class="secondary" onclick="triggerHealthSync()">Sync Smartwatch Metrics</button>
+                        </div>
+
+                        <!-- Individual / Group Streak Freeze -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+                                <h3 style="font-size: 0.95rem;">🛡️ Burn Personal Freeze</h3>
+                                <div class="form-group">
+                                    <label>Missed Date</label>
+                                    <input type="text" id="freezeDate" value="2026-06-14" placeholder="YYYY-MM-DD">
+                                </div>
+                                <button class="critical" onclick="triggerPersonalFreeze()">Consume Token</button>
+                            </div>
+                            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+                                <h3 style="font-size: 0.95rem;">👥 Burn Shared Group Freeze</h3>
+                                <div class="form-group">
+                                    <label>Missed Date</label>
+                                    <input type="text" id="groupFreezeDate" value="2026-06-11" placeholder="YYYY-MM-DD">
+                                </div>
+                                <button class="critical" onclick="triggerGroupFreeze()">Deduct Pool Token</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side: Synthesizer & Console Logs -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- Premium Audio Synthesizer -->
+                <div class="card">
+                    <h2>AI Voice-Cloning Synthesizer</h2>
+                    <div class="form-group">
+                        <label>Custom Voice Clone ID</label>
+                        <input type="text" id="voiceCloneId" value="voice-clone-shubham-001">
+                    </div>
+                    <div style="display: flex; gap: 1.5rem; align-items: center;">
+                        <input type="checkbox" id="simulateFailure" style="width: auto;">
+                        <label for="simulateFailure" style="text-transform: none; font-size: 0.9rem; cursor: pointer;">Simulate ElevenLabs Service Failure</label>
+                    </div>
+                    <button onclick="triggerVoiceSynthesis()">Synthesize Premium Audio Roast</button>
+
+                    <!-- Embedded Audio Player Container -->
+                    <div class="audio-player-card" id="audioPlayerCard">
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem; width: 100%;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-state-frozen);">▶ Secure Pre-signed Audio Stream</span>
+                            <audio id="audioPlayer" controls></audio>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Console Output Log -->
+                <div class="card" style="flex-grow: 1;">
+                    <h2>System API Traffic Console</h2>
+                    <div class="console" id="consoleLogs">
+                        <div class="console-entry"><span class="console-time">[00:00:00]</span> Console initialized. Ready to execute requests.</div>
+                    </div>
+                    <button class="secondary" style="align-self: flex-end; padding: 0.4rem 1rem;" onclick="clearConsole()">Clear Logs</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const logConsole = (message, isError = false) => {
+            const consoleBox = document.getElementById('consoleLogs');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'console-entry';
+            entry.style.color = isError ? 'var(--color-state-critical)' : '#39ff14';
+            entry.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
+            consoleBox.appendChild(entry);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        };
+
+        const clearConsole = () => {
+            document.getElementById('consoleLogs').innerHTML = '<div class="console-entry"><span class="console-time">[00:00:00]</span> Console cleared.</div>';
+        };
+
+        // Submit Habit Config
+        document.getElementById('streakForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                streakId: document.getElementById('streakId').value,
+                accountId: document.getElementById('accountId').value,
+                activityIdentifier: document.getElementById('activity').value,
+                localScheduledTime: document.getElementById('scheduledTime').value,
+                targetIanaTimezone: document.getElementById('timezone').value,
+                customAnchorParagraph: document.getElementById('anchor').value,
+                selectedArchetype: document.getElementById('archetype').value
+            };
+
+            logConsole(`POST /api/streak | Payload: ${JSON.stringify(payload)}`);
+
+            try {
+                const res = await fetch('/api/streak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const text = await res.text();
+                logConsole(`Response: ${text}`);
+            } catch (err) {
+                logConsole(`Error: ${err.message}`, true);
+            }
+        });
+
+        // Trigger Manual Checkin
+        async function triggerManualCheckin() {
+            const payload = {
+                streakId: document.getElementById('streakId').value,
+                timezoneId: document.getElementById('checkinTz').value,
+                timestampUtc: document.getElementById('checkinTime').value
+            };
+
+            logConsole(`POST /api/check-in | Payload: ${JSON.stringify(payload)}`);
+
+            try {
+                const res = await fetch('/api/check-in', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const text = await res.text();
+                if (res.ok) {
+                    logConsole(`Response: ${text}`);
+                } else {
+                    logConsole(`Failed (Status ${res.status}): ${text}`, true);
+                }
+            } catch (err) {
+                logConsole(`Error: ${err.message}`, true);
+            }
+        }
+
+        // Trigger Health Sync
+        async function triggerHealthSync() {
+            const payload = {
+                accountId: document.getElementById('accountId').value,
+                streakId: document.getElementById('streakId').value,
+                steps: parseInt(document.getElementById('syncSteps').value),
+                sleepMinutes: parseInt(document.getElementById('syncSleep').value),
+                timestampUtc: document.getElementById('syncTime').value,
+                timezoneId: document.getElementById('checkinTz').value
+            };
+
+            logConsole(`POST /api/sync/health | Payload: ${JSON.stringify(payload)}`);
+
+            try {
+                const res = await fetch('/api/sync/health', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const text = await res.text();
+                logConsole(`Response: ${text}`);
+            } catch (err) {
+                logConsole(`Error: ${err.message}`, true);
+            }
+        }
+
+        // Trigger Personal Freeze
+        async function triggerPersonalFreeze() {
+            const payload = {
+                accountId: document.getElementById('accountId').value,
+                streakId: document.getElementById('streakId').value,
+                missedDate: document.getElementById('freezeDate').value
+            };
+
+            logConsole(`POST /api/streak/freeze | Payload: ${JSON.stringify(payload)}`);
+
+            try {
+                const res = await fetch('/api/streak/freeze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const text = await res.text();
+                if (res.ok) {
+                    logConsole(`Response: ${text}`);
+                } else {
+                    logConsole(`Failed (Status ${res.status}): ${text}`, true);
+                }
+            } catch (err) {
+                logConsole(`Error: ${err.message}`, true);
+            }
+        }
+
+        // Trigger Group Freeze
+        async function triggerGroupFreeze() {
+            const payload = {
+                accountId: document.getElementById('accountId').value,
+                streakId: document.getElementById('streakId').value,
+                missedDate: document.getElementById('groupFreezeDate').value
+            };
+
+            logConsole(`POST /api/streak/freeze/group | Payload: ${JSON.stringify(payload)}`);
+
+            try {
+                const res = await fetch('/api/streak/freeze/group', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const text = await res.text();
+                if (res.ok) {
+                    logConsole(`Response: ${text}`);
+                } else {
+                    logConsole(`Failed (Status ${res.status}): ${text}`, true);
+                }
+            } catch (err) {
+                logConsole(`Error: ${err.message}`, true);
+            }
+        }
+
+        // Trigger Voice Synthesis
+        async function triggerVoiceSynthesis() {
+            const req = {
+                motivationRequest: {
+                    userId: document.getElementById('accountId').value,
+                    username: "John",
+                    goalTitle: document.getElementById('activity').value,
+                    targetTime: document.getElementById('scheduledTime').value,
+                    customAnchorText: document.getElementById('anchor').value,
+                    archetype: document.getElementById('archetype').value
+                },
+                voiceCloneId: document.getElementById('voiceCloneId').value,
+                simulateFailure: document.getElementById('simulateFailure').checked
+            };
+
+            logConsole(`POST /api/motivation/voice?userTier=PREMIUM | Payload: ${JSON.stringify(req)}`);
+
+            try {
+                const res = await fetch('/api/motivation/voice?userTier=PREMIUM', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(req)
+                });
+                const text = await res.text();
+                logConsole(`Response: ${text}`);
+
+                if (res.ok && text.includes("Audio URL: ")) {
+                    // Extract relative audio URL path
+                    const urlMarker = "Audio URL: ";
+                    const urlStart = text.indexOf(urlMarker) + urlMarker.length;
+                    const urlEnd = text.indexOf(" | Text Roast");
+                    const relativeUrl = text.substring(urlStart, urlEnd);
+
+                    // Show player card and load URL stream
+                    const playerCard = document.getElementById('audioPlayerCard');
+                    const player = document.getElementById('audioPlayer');
+                    player.src = relativeUrl;
+                    playerCard.style.display = 'flex';
+                    logConsole(`Secure pre-signed URL loaded into player: ${relativeUrl}`);
+                } else {
+                    document.getElementById('audioPlayerCard').style.display = 'none';
+                }
+            } catch (err) {
+                logConsole(`Error: ${err.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
