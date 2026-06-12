@@ -52,6 +52,11 @@ public class AppConfig {
     }
 
     @Bean
+    public GroupStreakFreezeManager groupStreakFreezeManager(DataSource dataSource) {
+        return new GroupStreakFreezeManager(dataSource);
+    }
+
+    @Bean
     public NotificationScheduler notificationScheduler(DataSource dataSource, MessageQueueBroker messageQueueBroker) {
         return new NotificationScheduler(dataSource, messageQueueBroker);
     }

@@ -107,4 +107,77 @@ public class LockedInApplicationTests {
         assertTrue(motivationRes.getBody().contains("Generative AI Roast"));
         assertTrue(motivationRes.getBody().contains("Daily Coding"));
     }
+
+    @Test
+    public void testGroupFreezeIntegrationFlow() {
+        String baseUrl = "http://localhost:" + port + "/api";
+
+        // Create user streak first so foreign keys resolve cleanly
+        StreakConfigRequest streakReq = new StreakConfigRequest(
+                "streak-group-999",
+                "account-group-999",
+                "Group Activity",
+                "09:00:00",
+                "America/New_York",
+                "Do it for the team",
+                "PROFESSIONAL"
+        );
+        HttpEntity<StreakConfigRequest> streakEntity = new HttpEntity<>(streakReq);
+        ResponseEntity<String> streakRes = restTemplate.postForEntity(baseUrl + "/streak", streakEntity, String.class);
+        assertEquals(HttpStatus.OK, streakRes.getStatusCode());
+
+        // Setup a group and membership in DB directly
+        String groupId = "group-999";
+        jdbcTemplate.update("INSERT INTO group_inventory_vault (group_id, available_freeze_tokens) VALUES (?, 2);", groupId);
+        jdbcTemplate.update("INSERT INTO group_memberships (account_id, group_id) VALUES (?, ?);", "account-group-999", groupId);
+
+        // Burn a group freeze token (missed day: 2026-06-11)
+        FreezeRequest freezeReq = new FreezeRequest(
+                "account-group-999",
+                "streak-group-999",
+                "2026-06-11"
+        );
+        HttpEntity<FreezeRequest> freezeEntity = new HttpEntity<>(freezeReq);
+        ResponseEntity<String> freezeRes = restTemplate.postForEntity(baseUrl + "/streak/freeze/group", freezeEntity, String.class);
+        assertEquals(HttpStatus.OK, freezeRes.getStatusCode());
+        assertTrue(freezeRes.getBody().contains("Group streak freeze applied successfully"));
+
+        // Verify tokens count in group vault is now 1 (started with 2)
+        Integer groupTokens = jdbcTemplate.queryForObject("SELECT available_freeze_tokens FROM group_inventory_vault WHERE group_id = ?", Integer.class, groupId);
+        assertEquals(1, groupTokens);
+
+        // Verify audit log is present
+        Map<String, Object> auditMap = jdbcTemplate.queryForMap("SELECT * FROM group_freeze_audit_logs WHERE group_id = ? AND streak_id = ?", groupId, "streak-group-999");
+        assertEquals("account-group-999", auditMap.get("ACCOUNT_ID"));
+        assertEquals(java.sql.Date.valueOf("2026-06-11"), auditMap.get("RESOLVED_CALENDAR_DATE"));
+
+        // Verify activity log matches logical date and execution state
+        Map<String, Object> activityMap = jdbcTemplate.queryForMap("SELECT * FROM customer_activity_logs WHERE streak_id = ? AND resolved_calendar_date = ?", "streak-group-999", java.sql.Date.valueOf("2026-06-11"));
+        assertEquals("FROZEN", activityMap.get("EXECUTION_STATE"));
+
+        // Burn the second group token
+        FreezeRequest freezeReq2 = new FreezeRequest(
+                "account-group-999",
+                "streak-group-999",
+                "2026-06-12"
+        );
+        HttpEntity<FreezeRequest> freezeEntity2 = new HttpEntity<>(freezeReq2);
+        ResponseEntity<String> freezeRes2 = restTemplate.postForEntity(baseUrl + "/streak/freeze/group", freezeEntity2, String.class);
+        assertEquals(HttpStatus.OK, freezeRes2.getStatusCode());
+
+        // Now tokens count is 0
+        Integer groupTokensZero = jdbcTemplate.queryForObject("SELECT available_freeze_tokens FROM group_inventory_vault WHERE group_id = ?", Integer.class, groupId);
+        assertEquals(0, groupTokensZero);
+
+        // Try to burn a third token (should fail since balance is 0)
+        FreezeRequest freezeReq3 = new FreezeRequest(
+                "account-group-999",
+                "streak-group-999",
+                "2026-06-13"
+        );
+        HttpEntity<FreezeRequest> freezeEntity3 = new HttpEntity<>(freezeReq3);
+        ResponseEntity<String> freezeRes3 = restTemplate.postForEntity(baseUrl + "/streak/freeze/group", freezeEntity3, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, freezeRes3.getStatusCode());
+        assertTrue(freezeRes3.getBody().contains("Failed to apply group freeze"));
+    }
 }

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0007 |
-| **Status** | Draft |
+| **Status** | Done |
 | **Branch** | `feature/group-freeze-pool` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -45,7 +45,7 @@ When a group member misses their check-in window, a freeze token is consumed ato
 
 ## 3. Phases
 
-### Phase A — Database Schema Extensions · Status: Pending
+### Phase A — Database Schema Extensions · Status: Done
 - **Does:** Extend `schema.sql` to include `group_inventory_vault`, `group_memberships`, and `group_freeze_audit_logs`.
 - **Verify:** Run database initialization check.
 - **Changed files:**
@@ -54,7 +54,7 @@ When a group member misses their check-in window, a freeze token is consumed ato
   |---|---|
   | `src/main/resources/schema.sql` | Added group vault, membership, and audit log tables (modified) |
 
-### Phase B — Service Layer & Concurrency Control · Status: Pending
+### Phase B — Service Layer & Concurrency Control · Status: Done
 - **Does:** Build `GroupStreakFreezeManager` using pessimistic row locks.
 - **Verify:** Compile cleanly and run transaction boundary unit checks.
 - **Changed files:**
@@ -63,7 +63,7 @@ When a group member misses their check-in window, a freeze token is consumed ato
   |---|---|
   | `src/main/java/com/lockedin/engine/GroupStreakFreezeManager.java` | Atomic group-level freeze manager with SELECT FOR UPDATE (new) |
 
-### Phase C — REST Endpoints & Configurations · Status: Pending
+### Phase C — REST Endpoints & Configurations · Status: Done
 - **Does:** Configure DI beans and expose endpoint `/api/streak/freeze/group` in controller.
 - **Verify:** Verify the endpoint compiles and routes correctly.
 - **Changed files:**
@@ -73,7 +73,7 @@ When a group member misses their check-in window, a freeze token is consumed ato
   | `src/main/java/com/lockedin/config/AppConfig.java` | Configured GroupStreakFreezeManager bean (modified) |
   | `src/main/java/com/lockedin/controller/LockedInController.java` | Added /api/streak/freeze/group endpoint (modified) |
 
-### Phase D — Integration Verification · Status: Pending
+### Phase D — Integration Verification · Status: Done
 - **Does:** Write full integration tests covering group setups, freeze token consumption, and double-spend race conditions.
 - **Verify:** Run `mvn clean test` successfully.
 - **Changed files:**

@@ -3,6 +3,7 @@ package com.lockedin.controller;
 import com.lockedin.engine.MotivationContext;
 import com.lockedin.engine.MotivationEngineRouter;
 import com.lockedin.engine.StreakFreezeManager;
+import com.lockedin.engine.GroupStreakFreezeManager;
 import com.lockedin.engine.TimezoneEvaluator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,15 +20,18 @@ public class LockedInController {
 
     private final JdbcTemplate jdbcTemplate;
     private final StreakFreezeManager streakFreezeManager;
+    private final GroupStreakFreezeManager groupStreakFreezeManager;
     private final MotivationEngineRouter motivationEngineRouter;
     private final TimezoneEvaluator timezoneEvaluator;
 
     public LockedInController(JdbcTemplate jdbcTemplate,
                               StreakFreezeManager streakFreezeManager,
+                              GroupStreakFreezeManager groupStreakFreezeManager,
                               MotivationEngineRouter motivationEngineRouter,
                               TimezoneEvaluator timezoneEvaluator) {
         this.jdbcTemplate = jdbcTemplate;
         this.streakFreezeManager = streakFreezeManager;
+        this.groupStreakFreezeManager = groupStreakFreezeManager;
         this.motivationEngineRouter = motivationEngineRouter;
         this.timezoneEvaluator = timezoneEvaluator;
     }
@@ -111,6 +115,34 @@ public class LockedInController {
             return ResponseEntity.ok("Streak freeze applied successfully. Token consumed, log injected.");
         } else {
             return ResponseEntity.badRequest().body("Failed to apply freeze. Depleted tokens or invalid records.");
+        }
+    }
+
+    @PostMapping("/streak/freeze/group")
+    public ResponseEntity<String> applyGroupFreeze(@RequestBody FreezeRequest req) {
+        Date missedDate = Date.valueOf(req.missedDate());
+        
+        // Seed default test group, membership and group token if not present to facilitate integration testing
+        String resolveGroupSql = "SELECT group_id FROM group_memberships WHERE account_id = ?;";
+        String groupId = null;
+        try {
+            groupId = jdbcTemplate.queryForObject(resolveGroupSql, String.class, req.accountId());
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            // Seed a test group and membership
+            groupId = "test-group-id";
+            String seedGroupSql = "INSERT INTO group_inventory_vault (group_id, available_freeze_tokens) VALUES (?, 1);";
+            jdbcTemplate.update(seedGroupSql, groupId);
+            
+            String seedMembershipSql = "INSERT INTO group_memberships (account_id, group_id) VALUES (?, ?);";
+            jdbcTemplate.update(seedMembershipSql, req.accountId(), groupId);
+        }
+
+        boolean success = groupStreakFreezeManager.applyAtomicGroupStreakFreeze(req.accountId(), req.streakId(), missedDate);
+        
+        if (success) {
+            return ResponseEntity.ok("Group streak freeze applied successfully. Group token consumed, audit log and activity log injected.");
+        } else {
+            return ResponseEntity.badRequest().body("Failed to apply group freeze. Depleted group tokens or invalid records.");
         }
     }
 

@@ -29,3 +29,27 @@ CREATE TABLE IF NOT EXISTS account_inventory_vault (
     -- Database integrity guardrail preventing negative asset depletion loops
     CONSTRAINT asset_floor_limit CHECK (available_freeze_tokens >= 0)
 );
+
+-- 4. Shared Group Freeze Token Pool Vault
+CREATE TABLE IF NOT EXISTS group_inventory_vault (
+    group_id VARCHAR(64) PRIMARY KEY,
+    available_freeze_tokens INT DEFAULT 0 NOT NULL,
+    CONSTRAINT group_asset_floor_limit CHECK (available_freeze_tokens >= 0)
+);
+
+-- 5. User Group Membership Mapping
+CREATE TABLE IF NOT EXISTS group_memberships (
+    account_id VARCHAR(64) PRIMARY KEY,
+    group_id VARCHAR(64) NOT NULL REFERENCES group_inventory_vault(group_id) ON DELETE CASCADE
+);
+
+-- 6. Shared Group Freeze Token Consumption Audit Log
+CREATE TABLE IF NOT EXISTS group_freeze_audit_logs (
+    audit_id VARCHAR(64) PRIMARY KEY,
+    group_id VARCHAR(64) NOT NULL REFERENCES group_inventory_vault(group_id) ON DELETE CASCADE,
+    account_id VARCHAR(64) NOT NULL,
+    streak_id VARCHAR(64) NOT NULL REFERENCES app_user_streaks(streak_id) ON DELETE CASCADE,
+    resolved_calendar_date DATE NOT NULL,
+    consumed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT unique_group_streak_date UNIQUE (group_id, streak_id, resolved_calendar_date)
+);
