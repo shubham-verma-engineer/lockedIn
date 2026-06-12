@@ -23,7 +23,7 @@ public class NotificationScheduler {
         ZonedDateTime nowUtc = ZonedDateTime.now(ZoneOffset.UTC);
         String currentMinute = nowUtc.format(DateTimeFormatter.ofPattern("HH:mm:00"));
         
-        String query = "SELECT us.user_id, us.streak_id, us.selected_archetype " +
+        String query = "SELECT us.account_id, us.streak_id, us.selected_archetype " +
                        "FROM app_user_streaks us " +
                        "LEFT JOIN customer_activity_logs sl ON us.streak_id = sl.streak_id " +
                        "AND sl.resolved_calendar_date = CURRENT_DATE " +
@@ -37,7 +37,7 @@ public class NotificationScheduler {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     NotificationTaskPayload payload = new NotificationTaskPayload(
-                        rs.getString("user_id"),
+                        rs.getString("account_id"),
                         rs.getString("streak_id"),
                         rs.getString("selected_archetype")
                     );

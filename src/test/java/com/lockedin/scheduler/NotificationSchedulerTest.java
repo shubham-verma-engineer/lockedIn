@@ -52,7 +52,7 @@ public class NotificationSchedulerTest {
         // Simulate 2 rows in result set
         when(mockResultSet.next()).thenReturn(true, true, false);
         
-        when(mockResultSet.getString("user_id")).thenReturn("user-A", "user-B");
+        when(mockResultSet.getString("account_id")).thenReturn("user-A", "user-B");
         when(mockResultSet.getString("streak_id")).thenReturn("streak-A", "streak-B");
         when(mockResultSet.getString("selected_archetype")).thenReturn("CASUAL", "STRICT");
 
