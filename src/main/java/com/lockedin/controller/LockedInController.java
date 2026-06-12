@@ -4,6 +4,7 @@ import com.lockedin.engine.MotivationContext;
 import com.lockedin.engine.MotivationEngineRouter;
 import com.lockedin.engine.StreakFreezeManager;
 import com.lockedin.engine.GroupStreakFreezeManager;
+import com.lockedin.engine.VoiceCloningSynthesizer;
 import com.lockedin.engine.TimezoneEvaluator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,17 +22,20 @@ public class LockedInController {
     private final JdbcTemplate jdbcTemplate;
     private final StreakFreezeManager streakFreezeManager;
     private final GroupStreakFreezeManager groupStreakFreezeManager;
+    private final VoiceCloningSynthesizer voiceCloningSynthesizer;
     private final MotivationEngineRouter motivationEngineRouter;
     private final TimezoneEvaluator timezoneEvaluator;
 
     public LockedInController(JdbcTemplate jdbcTemplate,
                               StreakFreezeManager streakFreezeManager,
                               GroupStreakFreezeManager groupStreakFreezeManager,
+                              VoiceCloningSynthesizer voiceCloningSynthesizer,
                               MotivationEngineRouter motivationEngineRouter,
                               TimezoneEvaluator timezoneEvaluator) {
         this.jdbcTemplate = jdbcTemplate;
         this.streakFreezeManager = streakFreezeManager;
         this.groupStreakFreezeManager = groupStreakFreezeManager;
+        this.voiceCloningSynthesizer = voiceCloningSynthesizer;
         this.motivationEngineRouter = motivationEngineRouter;
         this.timezoneEvaluator = timezoneEvaluator;
     }
@@ -185,6 +189,28 @@ public class LockedInController {
         jdbcTemplate.update(updateStreakSql, req.streakId());
         
         return ResponseEntity.ok("Health sync successful. Check-in logged for logical date: " + logicalDate + ". Streak incremented.");
+    }
+
+    @PostMapping("/motivation/voice")
+    public ResponseEntity<String> generateVoiceMotivation(@RequestBody VoiceSynthesisRequest req, 
+                                                           @RequestParam(defaultValue = "FREE") String userTier) {
+        MotivationRequest motivationReq = req.motivationRequest();
+        MotivationContext context = new MotivationContext(
+                motivationReq.userId(),
+                motivationReq.username(),
+                motivationReq.goalTitle(),
+                motivationReq.targetTime(),
+                motivationReq.customAnchorText(),
+                motivationReq.archetype()
+        );
+        String textMessage = motivationEngineRouter.routeAndGenerate(context, userTier);
+        
+        try {
+            String audioUrl = voiceCloningSynthesizer.synthesizeVoiceRoast(textMessage, req.voiceCloneId(), req.simulateFailure());
+            return ResponseEntity.ok("Voice synthesis successful. Audio URL: " + audioUrl + " | Text Roast: " + textMessage);
+        } catch (Exception e) {
+            return ResponseEntity.ok("Voice synthesis failed, falling back to text notification: " + textMessage);
+        }
     }
 
     @PostMapping("/motivation")

@@ -283,4 +283,45 @@ public class LockedInApplicationTests {
         Integer currentStreakFinal = jdbcTemplate.queryForObject("SELECT tally_current_streak FROM app_user_streaks WHERE streak_id = ?", Integer.class, "streak-sync-888");
         assertEquals(2, currentStreakFinal);
     }
+
+    @Test
+    public void testVoiceCloningIntegrationFlow() {
+        String baseUrl = "http://localhost:" + port + "/api";
+
+        MotivationRequest motivationReq = new MotivationRequest(
+                "user-222",
+                "Shubham",
+                "Workout Routine",
+                "07:00 AM",
+                "Don't lose your gains",
+                "STRICT"
+        );
+
+        // 1. Success case: Voice synthesis succeeds, returns pre-signed audio clip URL and original text roast
+        VoiceSynthesisRequest successReq = new VoiceSynthesisRequest(
+                motivationReq,
+                "voice-clone-workout-999",
+                false
+        );
+        HttpEntity<VoiceSynthesisRequest> successEntity = new HttpEntity<>(successReq);
+        ResponseEntity<String> successRes = restTemplate.postForEntity(baseUrl + "/motivation/voice?userTier=PREMIUM", successEntity, String.class);
+        assertEquals(HttpStatus.OK, successRes.getStatusCode());
+        assertTrue(successRes.getBody().contains("Voice synthesis successful"));
+        assertTrue(successRes.getBody().contains("https://audio.lockedin.com/clips/voice-clone-workout-999"));
+        assertTrue(successRes.getBody().contains("token="));
+        assertTrue(successRes.getBody().contains("expires="));
+
+        // 2. Fallback case: Voice synthesis fails (simulateFailure = true), falls back gracefully to standard text push notification
+        VoiceSynthesisRequest failureReq = new VoiceSynthesisRequest(
+                motivationReq,
+                "voice-clone-workout-999",
+                true
+        );
+        HttpEntity<VoiceSynthesisRequest> failureEntity = new HttpEntity<>(failureReq);
+        ResponseEntity<String> failureRes = restTemplate.postForEntity(baseUrl + "/motivation/voice?userTier=PREMIUM", failureEntity, String.class);
+        assertEquals(HttpStatus.OK, failureRes.getStatusCode());
+        assertTrue(failureRes.getBody().contains("Voice synthesis failed, falling back to text notification"));
+        assertTrue(failureRes.getBody().contains("Generative AI Roast"));
+        assertTrue(failureRes.getBody().contains("Workout Routine"));
+    }
 }

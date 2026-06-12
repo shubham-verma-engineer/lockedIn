@@ -57,6 +57,11 @@ public class AppConfig {
     }
 
     @Bean
+    public VoiceCloningSynthesizer voiceCloningSynthesizer() {
+        return new VoiceCloningSynthesizer();
+    }
+
+    @Bean
     public NotificationScheduler notificationScheduler(DataSource dataSource, MessageQueueBroker messageQueueBroker) {
         return new NotificationScheduler(dataSource, messageQueueBroker);
     }
