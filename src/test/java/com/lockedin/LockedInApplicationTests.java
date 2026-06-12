@@ -180,4 +180,107 @@ public class LockedInApplicationTests {
         assertEquals(HttpStatus.BAD_REQUEST, freezeRes3.getStatusCode());
         assertTrue(freezeRes3.getBody().contains("Failed to apply group freeze"));
     }
+
+    @Test
+    public void testHealthSyncIntegrationFlow() {
+        String baseUrl = "http://localhost:" + port + "/api";
+
+        // Setup streak record
+        StreakConfigRequest streakReq = new StreakConfigRequest(
+                "streak-sync-888",
+                "account-sync-888",
+                "Steps and Sleep",
+                "09:00:00",
+                "America/Los_Angeles",
+                "Keep healthy",
+                "CASUAL"
+        );
+        HttpEntity<StreakConfigRequest> streakEntity = new HttpEntity<>(streakReq);
+        ResponseEntity<String> streakRes = restTemplate.postForEntity(baseUrl + "/streak", streakEntity, String.class);
+        assertEquals(HttpStatus.OK, streakRes.getStatusCode());
+
+        // 1. Sync fail: steps = 4000, sleepMinutes = 300 (neither met)
+        HealthSyncRequest failReq = new HealthSyncRequest(
+                "account-sync-888",
+                "streak-sync-888",
+                4000,
+                300,
+                "2026-06-16T08:30:00Z", // Tue 01:30 AM PDT -> logical calendar date Monday June 15
+                "America/Los_Angeles"
+        );
+        HttpEntity<HealthSyncRequest> failEntity = new HttpEntity<>(failReq);
+        ResponseEntity<String> failRes = restTemplate.postForEntity(baseUrl + "/sync/health", failEntity, String.class);
+        assertEquals(HttpStatus.OK, failRes.getStatusCode());
+        assertTrue(failRes.getBody().contains("did not meet the required thresholds"));
+
+        // Verify no check-in logged
+        Integer countBefore = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM customer_activity_logs WHERE streak_id = ?", Integer.class, "streak-sync-888");
+        assertEquals(0, countBefore);
+
+        // 2. Sync success: steps = 6000 (steps threshold met)
+        // Tuesday June 16, 01:30 AM local time = 08:30 AM UTC
+        // Should resolve to logical calendar date Monday June 15 (due to 3h Night-Owl grace period)
+        HealthSyncRequest stepsReq = new HealthSyncRequest(
+                "account-sync-888",
+                "streak-sync-888",
+                6000,
+                0,
+                "2026-06-16T08:30:00Z",
+                "America/Los_Angeles"
+        );
+        HttpEntity<HealthSyncRequest> stepsEntity = new HttpEntity<>(stepsReq);
+        ResponseEntity<String> stepsRes = restTemplate.postForEntity(baseUrl + "/sync/health", stepsEntity, String.class);
+        assertEquals(HttpStatus.OK, stepsRes.getStatusCode());
+        assertTrue(stepsRes.getBody().contains("Health sync successful"));
+        assertTrue(stepsRes.getBody().contains("logical date: 2026-06-15"));
+
+        // Verify check-in log resolved calendar date is 2026-06-15
+        Map<String, Object> logMap = jdbcTemplate.queryForMap("SELECT * FROM customer_activity_logs WHERE streak_id = ?", "streak-sync-888");
+        assertEquals("COMPLETED", logMap.get("EXECUTION_STATE"));
+        assertEquals(java.sql.Date.valueOf("2026-06-15"), logMap.get("RESOLVED_CALENDAR_DATE"));
+
+        // Verify streak count incremented
+        Integer currentStreak = jdbcTemplate.queryForObject("SELECT tally_current_streak FROM app_user_streaks WHERE streak_id = ?", Integer.class, "streak-sync-888");
+        assertEquals(1, currentStreak);
+
+        // 3. Duplicate sync: steps = 8000 (threshold met) on the same logical date (2026-06-15)
+        // Should reject gracefully (returns 200 OK with duplicate message, does not crash)
+        HealthSyncRequest duplicateReq = new HealthSyncRequest(
+                "account-sync-888",
+                "streak-sync-888",
+                8000,
+                400,
+                "2026-06-16T09:15:00Z", // Tue 02:15 AM PDT -> logical calendar date Monday June 15
+                "America/Los_Angeles"
+        );
+        HttpEntity<HealthSyncRequest> duplicateEntity = new HttpEntity<>(duplicateReq);
+        ResponseEntity<String> duplicateRes = restTemplate.postForEntity(baseUrl + "/sync/health", duplicateEntity, String.class);
+        assertEquals(HttpStatus.OK, duplicateRes.getStatusCode());
+        assertTrue(duplicateRes.getBody().contains("Already checked in for logical date: 2026-06-15"));
+
+        // Verify streak count remains 1
+        Integer currentStreakDup = jdbcTemplate.queryForObject("SELECT tally_current_streak FROM app_user_streaks WHERE streak_id = ?", Integer.class, "streak-sync-888");
+        assertEquals(1, currentStreakDup);
+
+        // 4. Sync success: sleepMinutes = 400 (sleep threshold met) on a new logical date
+        // Tuesday June 16, 04:15 AM local time = Tuesday 11:15 AM UTC
+        // Should resolve to logical calendar date Tuesday June 16 (since it is outside the 3h grace period)
+        HealthSyncRequest sleepReq = new HealthSyncRequest(
+                "account-sync-888",
+                "streak-sync-888",
+                0,
+                400,
+                "2026-06-16T11:15:00Z",
+                "America/Los_Angeles"
+        );
+        HttpEntity<HealthSyncRequest> sleepEntity = new HttpEntity<>(sleepReq);
+        ResponseEntity<String> sleepRes = restTemplate.postForEntity(baseUrl + "/sync/health", sleepEntity, String.class);
+        assertEquals(HttpStatus.OK, sleepRes.getStatusCode());
+        assertTrue(sleepRes.getBody().contains("Health sync successful"));
+        assertTrue(sleepRes.getBody().contains("logical date: 2026-06-16"));
+
+        // Verify streak count incremented to 2
+        Integer currentStreakFinal = jdbcTemplate.queryForObject("SELECT tally_current_streak FROM app_user_streaks WHERE streak_id = ?", Integer.class, "streak-sync-888");
+        assertEquals(2, currentStreakFinal);
+    }
 }

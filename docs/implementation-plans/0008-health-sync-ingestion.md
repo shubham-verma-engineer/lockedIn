@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0008 |
-| **Status** | Draft |
+| **Status** | Done |
 | **Branch** | `feature/health-sync-ingestion` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -39,7 +39,7 @@ The goal is to develop a passive health ingestion adapter (STK-302) that syncs s
 
 ## 3. Phases
 
-### Phase A — Request Payload & Endpoint Infrastructure · Status: Pending
+### Phase A — Request Payload & Endpoint Infrastructure · Status: Done
 - **Does:** Create the `HealthSyncRequest` record and set up controller routing.
 - **Verify:** Endpoint compiles and responds with mock responses.
 - **Changed files:**
@@ -49,7 +49,7 @@ The goal is to develop a passive health ingestion adapter (STK-302) that syncs s
   | `src/main/java/com/lockedin/controller/HealthSyncRequest.java` | Ingestion request record (new) |
   | `src/main/java/com/lockedin/controller/LockedInController.java` | Added /api/sync/health endpoint handler (modified) |
 
-### Phase B — Health Metric Validation & Grace Period Integration · Status: Pending
+### Phase B — Health Metric Validation & Grace Period Integration · Status: Done
 - **Does:** Integrate metric checks (steps $\ge 5000$, sleep minutes $\ge 360$) and timezone translation via `TimezoneEvaluator`.
 - **Verify:** Check-ins are correctly mapped to logical dates and database check-ins run cleanly.
 - **Changed files:**
@@ -58,7 +58,7 @@ The goal is to develop a passive health ingestion adapter (STK-302) that syncs s
   |---|---|
   | `src/main/java/com/lockedin/controller/LockedInController.java` | Core logic to validate metrics and log database check-ins (modified) |
 
-### Phase C — Integration Verification · Status: Pending
+### Phase C — Integration Verification · Status: Done
 - **Does:** Write full integration tests covering threshold rules, grace period bounds, and duplicate check-in validation.
 - **Verify:** Run `mvn clean test` successfully.
 - **Changed files:**

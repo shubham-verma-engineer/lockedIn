@@ -146,6 +146,47 @@ public class LockedInController {
         }
     }
 
+    @PostMapping("/sync/health")
+    public ResponseEntity<String> syncHealth(@RequestBody HealthSyncRequest req) {
+        Instant eventTime = Instant.parse(req.timestampUtc());
+        LocalDate logicalDate = timezoneEvaluator.getLogicalDate(eventTime, req.timezoneId());
+        
+        boolean targetMet = false;
+        if (req.steps() != null && req.steps() >= 5000) {
+            targetMet = true;
+        }
+        if (req.sleepMinutes() != null && req.sleepMinutes() >= 360) {
+            targetMet = true;
+        }
+
+        if (!targetMet) {
+            return ResponseEntity.ok("Sync processed. Health metrics did not meet the required thresholds (steps >= 5000 or sleep minutes >= 360). Check-in not logged.");
+        }
+
+        String countSql = "SELECT COUNT(*) FROM customer_activity_logs WHERE streak_id = ? AND resolved_calendar_date = ?;";
+        Integer count = jdbcTemplate.queryForObject(countSql, Integer.class, req.streakId(), Date.valueOf(logicalDate));
+
+        if (count != null && count > 0) {
+            return ResponseEntity.ok("Sync processed. Already checked in for logical date: " + logicalDate + ". Duplicate sync request ignored.");
+        }
+
+        String logId = UUID.randomUUID().toString();
+        String insertLogSql = "INSERT INTO customer_activity_logs (log_id, streak_id, resolved_calendar_date, server_utc_timestamp, execution_state) " +
+                              "VALUES (?, ?, ?, ?, 'COMPLETED');";
+        
+        jdbcTemplate.update(insertLogSql,
+                logId,
+                req.streakId(),
+                Date.valueOf(logicalDate),
+                java.sql.Timestamp.from(eventTime)
+        );
+
+        String updateStreakSql = "UPDATE app_user_streaks SET tally_current_streak = tally_current_streak + 1 WHERE streak_id = ?;";
+        jdbcTemplate.update(updateStreakSql, req.streakId());
+        
+        return ResponseEntity.ok("Health sync successful. Check-in logged for logical date: " + logicalDate + ". Streak incremented.");
+    }
+
     @PostMapping("/motivation")
     public ResponseEntity<String> generateMotivation(@RequestBody MotivationRequest req, 
                                                      @RequestParam(defaultValue = "FREE") String userTier) {
