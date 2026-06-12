@@ -1,8 +1,10 @@
 package com.lockedin.config;
 
+import com.lockedin.client.ElevenLabsClient;
 import com.lockedin.engine.*;
 import com.lockedin.scheduler.MessageQueueBroker;
 import com.lockedin.scheduler.NotificationScheduler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -57,8 +59,16 @@ public class AppConfig {
     }
 
     @Bean
-    public VoiceCloningSynthesizer voiceCloningSynthesizer() {
-        return new VoiceCloningSynthesizer();
+    public ElevenLabsClient elevenLabsClient(
+            @Value("${elevenlabs.api.key}") String elevenLabsApiKey,
+            @Value("${elevenlabs.voice.url}") String elevenLabsVoiceUrl,
+            @Value("${elevenlabs.simulated}") boolean elevenLabsSimulated) {
+        return new ElevenLabsClient(elevenLabsApiKey, elevenLabsVoiceUrl, elevenLabsSimulated);
+    }
+
+    @Bean
+    public VoiceCloningSynthesizer voiceCloningSynthesizer(ElevenLabsClient elevenLabsClient) {
+        return new VoiceCloningSynthesizer(elevenLabsClient);
     }
 
     @Bean

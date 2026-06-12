@@ -307,9 +307,42 @@ public class LockedInApplicationTests {
         ResponseEntity<String> successRes = restTemplate.postForEntity(baseUrl + "/motivation/voice?userTier=PREMIUM", successEntity, String.class);
         assertEquals(HttpStatus.OK, successRes.getStatusCode());
         assertTrue(successRes.getBody().contains("Voice synthesis successful"));
-        assertTrue(successRes.getBody().contains("https://audio.lockedin.com/clips/voice-clone-workout-999"));
+        assertTrue(successRes.getBody().contains("/api/motivation/audio/"));
         assertTrue(successRes.getBody().contains("token="));
         assertTrue(successRes.getBody().contains("expires="));
+
+        // Extract the pre-signed URL from successRes.getBody()
+        String body = successRes.getBody();
+        String urlMarker = "Audio URL: ";
+        int urlStart = body.indexOf(urlMarker) + urlMarker.length();
+        int urlEnd = body.indexOf(" | Text Roast");
+        String relativeAudioUrl = body.substring(urlStart, urlEnd);
+
+        // Call GET to verify secure streaming
+        ResponseEntity<byte[]> audioRes = restTemplate.getForEntity("http://localhost:" + port + relativeAudioUrl, byte[].class);
+        assertEquals(HttpStatus.OK, audioRes.getStatusCode());
+        assertEquals("audio/mpeg", audioRes.getHeaders().getContentType().toString());
+        assertNotNull(audioRes.getBody());
+        assertTrue(audioRes.getBody().length > 0);
+
+        // Verify invalid token fails with 403
+        String invalidTokenUrl = relativeAudioUrl.replaceAll("token=[a-f0-9]+", "token=invalidtokenvalue");
+        ResponseEntity<String> invalidTokenRes = restTemplate.getForEntity("http://localhost:" + port + invalidTokenUrl, String.class);
+        assertEquals(HttpStatus.FORBIDDEN, invalidTokenRes.getStatusCode());
+        assertTrue(invalidTokenRes.getBody().contains("Access token is invalid"));
+
+        // Verify expired token fails with 403
+        String clipIdMarker = "/api/motivation/audio/";
+        int clipIdStart = relativeAudioUrl.indexOf(clipIdMarker) + clipIdMarker.length();
+        int clipIdEnd = relativeAudioUrl.indexOf("?");
+        String clipId = relativeAudioUrl.substring(clipIdStart, clipIdEnd);
+        
+        long expiredTimestamp = 1000000000L;
+        String validSignatureForExpired = com.lockedin.engine.VoiceCloningSynthesizer.generateSignature(clipId, expiredTimestamp);
+        String expiredTokenUrl = "/api/motivation/audio/" + clipId + "?token=" + validSignatureForExpired + "&expires=" + expiredTimestamp;
+        ResponseEntity<String> expiredRes = restTemplate.getForEntity("http://localhost:" + port + expiredTokenUrl, String.class);
+        assertEquals(HttpStatus.FORBIDDEN, expiredRes.getStatusCode());
+        assertTrue(expiredRes.getBody().contains("Link has expired"));
 
         // 2. Fallback case: Voice synthesis fails (simulateFailure = true), falls back gracefully to standard text push notification
         VoiceSynthesisRequest failureReq = new VoiceSynthesisRequest(

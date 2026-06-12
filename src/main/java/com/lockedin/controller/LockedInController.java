@@ -213,6 +213,42 @@ public class LockedInController {
         }
     }
 
+    @GetMapping("/motivation/audio/{clipId}")
+    public ResponseEntity<byte[]> streamAudioClip(
+            @PathVariable String clipId,
+            @RequestParam String token,
+            @RequestParam long expires) {
+
+        long currentSeconds = System.currentTimeMillis() / 1000;
+        if (currentSeconds > expires) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body("Link has expired.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        String expectedToken = com.lockedin.engine.VoiceCloningSynthesizer.generateSignature(clipId, expires);
+        if (!expectedToken.equals(token)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body("Access token is invalid or unauthorized.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        java.io.File audioFile = new java.io.File("media", clipId + ".mp3");
+        if (!audioFile.exists()) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body("Audio clip not found.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        try {
+            byte[] audioBytes = java.nio.file.Files.readAllBytes(audioFile.toPath());
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType("audio/mpeg"))
+                    .body(audioBytes);
+        } catch (java.io.IOException e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error reading audio file.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+    }
+
+
     @PostMapping("/motivation")
     public ResponseEntity<String> generateMotivation(@RequestBody MotivationRequest req, 
                                                      @RequestParam(defaultValue = "FREE") String userTier) {
