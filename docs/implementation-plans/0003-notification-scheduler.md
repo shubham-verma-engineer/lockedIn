@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0003 |
-| **Status** | In Progress |
+| **Status** | Done |
 | **Branch** | `feature/notification-scheduler` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -53,7 +53,7 @@ WHERE us.local_scheduled_time = ? AND sl.log_id IS NULL;
 
 ## 3. Phases
 
-### Phase 1 — Scheduler Interfaces & Classes · Status: Pending
+### Phase 1 — Scheduler Interfaces & Classes · Status: Done
 - **Does:** Create the `MessageQueueBroker` interface, `NotificationTaskPayload` record, and `NotificationScheduler` core class.
 - **Verify:** Successful Java compilation.
 - **Changed files:**
@@ -64,7 +64,7 @@ WHERE us.local_scheduled_time = ? AND sl.log_id IS NULL;
   | `src/main/java/com/lockedin/scheduler/NotificationTaskPayload.java` | Task payload JVM data record (new) |
   | `src/main/java/com/lockedin/scheduler/NotificationScheduler.java` | Main scheduler poll & enqueue worker (new) |
 
-### Phase 2 — Unit Testing & SQL Query Mocking · Status: Pending
+### Phase 2 — Unit Testing & Verification · Status: Done
 - **Does:** Write unit tests mock-asserting proper parameter binding, database connectivity, and push execution on the message broker.
 - **Verify:** Run Maven test suite and ensure all tests pass.
 - **Changed files:**
