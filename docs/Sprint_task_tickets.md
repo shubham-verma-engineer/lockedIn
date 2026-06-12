@@ -1,84 +1,102 @@
-# LockedIn Platform - Production Agile Sprint Task Tickets
+# LockedIn Platform - Sprint Tracking Dashboard & Task Hub
 
-## Document Control & Metadata
-- **Title:** Production Agile Sprint Task Tickets & Backlog Catalog
-- **Status:** Approved / Sprint 3 Planning Ready
-- **Version:** v2.0.0
-- **Authors:** Scrum Master & Product Owner
-- **Date:** June 2026
+## 📊 Sprint Status Board
 
----
+### Sprint 2: Core Execution Engine (Current Release)
+- **Status:** `RELEASED`
+- **Progress:** `[████████████████████] 100%` (2/2 Tickets Resolved)
+- **Target Version:** `v1.0.0-rc1`
 
-## 1. Active Sprint Tickets (Sprint 2 - Core Engine)
-
-### **Ref: STK-201** | Epic: Core Motivation Engine Pipeline | Priority: Blocker
-
-* **Title:** Construct Polymorphic Interface Factory Router Layout for Strategy Motivation Engines
-* **Technical Scope Assignment:**
-  - Build the structural Java core architecture layout including the foundational `MotivationEngine` interface and record objects. 
-  - Standardize routing: Free tier accounts must pull strings from the template compiler, while Premium tier requests route properties to the dynamic OpenAI API adapter.
-  - Integrate validation in [MotivationEngineRouter.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/MotivationEngineRouter.java).
-
-#### **Rigorous Acceptance Criteria:**
-1. Given a motivation context containing a `'FREE'` subscription tier token, the strategy factory must return a string parsed by the local static template compiler maps.
-2. Given a motivation context containing a `'PREMIUM'` subscriber layer, the factory routing algorithm must cleanly dispatch user variables to the dynamic LLM network client.
-3. The engine setup must throw an explicit `IllegalArgumentException` with the logged text message `Explicit runtime anomaly: Unmapped character archetype profile` if an unmapped archetype (not in Casual, Professional, Strict, 18+ Abusive, Abusive) is processed.
+### Sprint 3: Social & Wearables Integration (Next Backlog)
+- **Status:** `PLANNING`
+- **Progress:** `[░░░░░░░░░░░░░░░░░░░░] 0%` (0/3 Tickets Active)
+- **Target Version:** `v1.1.0`
 
 ---
 
-### **Ref: STK-202** | Epic: Asynchronous Time Evaluation | Priority: High
+## 📋 Master Task Matrix
 
-* **Title:** Implement Night-Owl Grace Period Offset Window Processing inside Core Time Evaluation Layer
-* **Technical Scope Assignment:**
-  - Code the core Java timezone transformation class [TimezoneEvaluator.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/TimezoneEvaluator.java) responsible for converting UTC timestamps into user local logical activity calendar dates.
-  - Incorporate the fixed 3-hour backward grace period variable ($W_g = 3\text{ hours}$).
-
-#### **Rigorous Acceptance Criteria:**
-1. An active logging API request arriving at 01:30 AM local time on a Tuesday calendar day must be written into PostgreSQL storage records under a Monday date identifier.
-2. An active logging API request arriving at 04:15 AM local time on a Tuesday calendar day must evaluate under a Tuesday date identifier, marking Monday as missed.
-3. If an invalid, null, or empty timezone string (e.g. `""`, `"Invalid/Zone"`) is passed, the evaluator must log a warning and fall back to UTC timezone coordinates to prevent execution layer collapse.
+| Ticket ID | Epic | Task Title | Priority | Status | Implemented Code / File |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **STK-201** | Core Engine | [Polymorphic Strategy Factory Router](#stk-201) | `BLOCKER` | 🟢 `DONE` | [MotivationEngineRouter.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/MotivationEngineRouter.java) |
+| **STK-202** | Timezone | [Night-Owl Timezone Grace Period](#stk-202) | `HIGH` | 🟢 `DONE` | [TimezoneEvaluator.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/TimezoneEvaluator.java) |
+| **STK-301** | Social | [Shared Group Freeze Token Pool](#stk-301) | `HIGH` | ⚪ `BACKLOG` | *Planned (Sprint 3)* |
+| **STK-302** | Sync | [Health Connect & HealthKit Ingestion](#stk-302) | `MEDIUM` | ⚪ `BACKLOG` | *Planned (Sprint 3)* |
+| **STK-303** | Premium | [AI Voice-Cloning Synthesizer](#stk-303) | `LOW` | ⚪ `BACKLOG` | *Planned (Sprint 3)* |
 
 ---
 
-## 2. New Backlog Feature Tickets (Sprint 3 - Social & Integrations)
+## 🛠️ Sprint 2: Core Engine (Completed)
 
-### **Ref: STK-301** | Epic: Group Accountability Pools | Priority: High
+### **STK-201** | Polymorphic Strategy Factory Router
+> **Epic:** Core Motivation Engine Pipeline  
+> **Status:** 🟢 `DONE` | **Priority:** `BLOCKER`  
+> **Target Files:** [MotivationEngineRouter.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/MotivationEngineRouter.java), [AiMotivationEngine.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/AiMotivationEngine.java)
 
-* **Title:** Design Shared Group Freeze Token Pool DDL and Transactional Processing
-* **Technical Scope Assignment:**
-  - Update the database schema to support shared "Group Pools" where friends can combine their daily freeze tokens.
-  - Create table `group_accountability_pools` (group_id PK, available_group_freezes INT CHECK >= 0).
-  - Implement a Spring/Java transaction service method `applyGroupStreakFreeze` that executes a row-level pessimistic lock (`SELECT FOR UPDATE`) on the group's balance, decrements it by 1, and inserts a `FROZEN` state record into `customer_activity_logs`.
+#### 📝 Description & Technical Scope
+Build the polymorphic core strategy routing engine that dynamically matches the user's subscription tier. Free users receive template-based responses, while Premium users receive fully customized Gen-AI LLM-generated roasts.
 
-#### **Rigorous Acceptance Criteria:**
-1. Transaction must run under `SERIALIZABLE` or `READ COMMITTED` isolation, preventing double-depletion when multiple users in a group trigger skips simultaneously.
-2. If the group pool has 0 available freeze tokens, the operation must abort, rollback the transaction, and return `false`.
-3. System must log an audit trail entry detailing which specific user consumed the group's freeze token.
-
----
-
-### **Ref: STK-302** | Epic: Smartwatch Integrations | Priority: Medium
-
-* **Title:** Implement Google Health Connect & Apple HealthKit Passive Sync Ingestion Adapter
-* **Technical Scope Assignment:**
-  - Create client-side background sync jobs that check for daily fitness goals (e.g. 10,000 steps, sleep target).
-  - Develop a REST API integration handler on the main app service `/api/v1/sync/health` to receive data bundles and trigger check-ins automatically.
-
-#### **Rigorous Acceptance Criteria:**
-1. Passive sync events must successfully parse the client's device timezone and map the activity to the correct logical calendar date applying the Night-Owl Grace Period ($W_g = 3\text{ hours}$).
-2. Ingested logs must be marked with `execution_state = 'COMPLETED'` and source identifier metadata in `customer_activity_logs` database records.
-3. Prevent duplicate check-ins if the user has already manually logged their habit target for that calendar day (database constraint `unique_streak_per_day` must handle this gracefully without server crashes).
+#### ☑️ Acceptance Criteria & Verification
+* [x] Route users to the template engine when subscription is `'FREE'`.
+* [x] Route users to the Gen-AI engine when subscription is `'PREMIUM'`.
+* [x] Throw an explicit `IllegalArgumentException` with the logged text message `Explicit runtime anomaly: Unmapped character archetype profile` if an unmapped archetype is processed.
 
 ---
 
-### **Ref: STK-303** | Epic: Custom Voice Synthesis | Priority: Low
+### **STK-202** | Night-Owl Timezone Grace Period
+> **Epic:** Asynchronous Time Evaluation  
+> **Status:** 🟢 `DONE` | **Priority:** `HIGH`  
+> **Target Files:** [TimezoneEvaluator.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/TimezoneEvaluator.java)
 
-* **Title:** Implement Premium AI Voice-Cloning Ingestion and Synthesizer Interface
-* **Technical Scope Assignment:**
-  - Integrate a third-party audio generation API (e.g., ElevenLabs) inside the notification delivery pipeline.
-  - Implement a user configuration controller to store 30-second audio voice cloning files.
-  - Synthesize custom audio files dynamically containing the generated roasts for premium notification delivery.
+#### 📝 Description & Technical Scope
+Code the core timezone translation logic that maps physical UTC server timestamps into user local logical activity dates, incorporating the 3-hour backward grace period ($W_g = 3\text{ hours}$).
 
-#### **Rigorous Acceptance Criteria:**
-1. If the voice synthesis API returns an error or rate limit, the delivery pipeline must gracefully catch the exception, write a diagnostic error log, and fallback to delivering a standard text push notification.
-2. Uploaded audio snippets must be stored securely in private AWS S3 buckets with timed pre-signed URL access control keys.
+#### ☑️ Acceptance Criteria & Verification
+* [x] Convert 01:30 AM local time Tuesday requests to the logical calendar date **Monday**.
+* [x] Convert 04:15 AM local time Tuesday requests to the logical calendar date **Tuesday**.
+* [x] Fall back to UTC timezone coordinates if input IANA timezone string is empty or invalid.
+
+---
+
+## 🔮 Sprint 3: Social & Wearables (Backlog)
+
+### **STK-301** | Shared Group Freeze Token Pool
+> **Epic:** Group Accountability Circles  
+> **Status:** ⚪ `BACKLOG` | **Priority:** `HIGH`  
+> **Target Files:** *New Service Layer (STK-301)*
+
+#### 📝 Description & Technical Scope
+Update the database schema to support group tables and implement row-level pessimistic locking (`SELECT FOR UPDATE`) on the group's balance to deduct freeze tokens atomically without race conditions.
+
+#### ☑️ Acceptance Criteria & Verification
+* [ ] Prevent double-spends when multiple users trigger skips at the exact same moment.
+* [ ] Abort transaction and return `false` if group pool available freeze tokens is 0.
+* [ ] Record audit logs detailing which user consumed the group's token.
+
+---
+
+### **STK-302** | Health Connect & HealthKit Ingestion
+> **Epic:** Smartwatch Wearables Sync  
+> **Status:** ⚪ `BACKLOG` | **Priority:** `MEDIUM`  
+> **Target Files:** *New Sync Controller Layer (STK-302)*
+
+#### 📝 Description & Technical Scope
+Develop a passive ingestion adapter to sync steps and sleep records from devices and resolve check-ins on the backend.
+
+#### ☑️ Acceptance Criteria & Verification
+* [ ] Parse client device timezones and map check-ins using the Night-Owl Grace Period ($W_g = 3$).
+* [ ] Reject duplicate check-ins on the same calendar day gracefully without server errors.
+
+---
+
+### **STK-303** | AI Voice-Cloning Synthesizer
+> **Epic:** Premium Customization  
+> **Status:** ⚪ `BACKLOG` | **Priority:** `LOW`  
+> **Target Files:** *New Audio Synthesis Provider (STK-303)*
+
+#### 📝 Description & Technical Scope
+Integrate an external audio synthesis API (e.g., ElevenLabs) to synthesize premium voice roasts based on uploaded user audio clips.
+
+#### ☑️ Acceptance Criteria & Verification
+* [ ] Fallback to standard text push notifications if the voice synthesis API fails.
+* [ ] Store audio clone snippets securely using pre-signed secure access tokens.
