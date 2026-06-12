@@ -2,15 +2,20 @@
 
 ## 📊 Sprint Status Board
 
-### Sprint 2: Core Execution Engine (Current Release)
+### Sprint 2: Core Execution Engine (Past Release)
 - **Status:** `RELEASED`
 - **Progress:** `[████████████████████] 100%` (2/2 Tickets Resolved)
 - **Target Version:** `v1.0.0-rc1`
 
-### Sprint 3: Social & Wearables Integration (Next Backlog)
+### Sprint 3: Social & Wearables Integration (Past Release)
 - **Status:** `RELEASED`
 - **Progress:** `[████████████████████] 100%` (3/3 Tickets Resolved)
 - **Target Version:** `v1.1.0`
+
+### Sprint 4: Production Profiles & API Integration (Current Release)
+- **Status:** `RELEASED`
+- **Progress:** `[████████████████████] 100%` (1/1 Tickets Resolved)
+- **Target Version:** `v1.2.0`
 
 ---
 
@@ -23,6 +28,7 @@
 | **STK-301** | Social | [Shared Group Freeze Token Pool](#stk-301) | `HIGH` | 🟢 `DONE` | [GroupStreakFreezeManager.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/GroupStreakFreezeManager.java) |
 | **STK-302** | Sync | [Health Connect & HealthKit Ingestion](#stk-302) | `MEDIUM` | 🟢 `DONE` | [LockedInController.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/controller/LockedInController.java#L153-L192) |
 | **STK-303** | Premium | [AI Voice-Cloning Synthesizer](#stk-303) | `LOW` | 🟢 `DONE` | [VoiceCloningSynthesizer.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/VoiceCloningSynthesizer.java) |
+| **STK-401** | Production | [Production Profiles & ElevenLabs API Integration](#stk-401) | `HIGH` | 🟢 `DONE` | [ElevenLabsClient.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/client/ElevenLabsClient.java) |
 
 
 ---
@@ -63,30 +69,30 @@ Code the core timezone translation logic that maps physical UTC server timestamp
 
 ### **STK-301** | Shared Group Freeze Token Pool
 > **Epic:** Group Accountability Circles  
-> **Status:** ⚪ `BACKLOG` | **Priority:** `HIGH`  
-> **Target Files:** *New Service Layer (STK-301)*
+> **Status:** 🟢 `DONE` | **Priority:** `HIGH`  
+> **Target Files:** [GroupStreakFreezeManager.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/engine/GroupStreakFreezeManager.java)
 
 #### 📝 Description & Technical Scope
 Update the database schema to support group tables and implement row-level pessimistic locking (`SELECT FOR UPDATE`) on the group's balance to deduct freeze tokens atomically without race conditions.
 
 #### ☑️ Acceptance Criteria & Verification
-* [ ] Prevent double-spends when multiple users trigger skips at the exact same moment.
-* [ ] Abort transaction and return `false` if group pool available freeze tokens is 0.
-* [ ] Record audit logs detailing which user consumed the group's token.
+* [x] Prevent double-spends when multiple users trigger skips at the exact same moment.
+* [x] Abort transaction and return `false` if group pool available freeze tokens is 0.
+* [x] Record audit logs detailing which user consumed the group's token.
 
 ---
 
 ### **STK-302** | Health Connect & HealthKit Ingestion
 > **Epic:** Smartwatch Wearables Sync  
-> **Status:** ⚪ `BACKLOG` | **Priority:** `MEDIUM`  
-> **Target Files:** *New Sync Controller Layer (STK-302)*
+> **Status:** 🟢 `DONE` | **Priority:** `MEDIUM`  
+> **Target Files:** [LockedInController.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/controller/LockedInController.java)
 
 #### 📝 Description & Technical Scope
 Develop a passive ingestion adapter to sync steps and sleep records from devices and resolve check-ins on the backend.
 
 #### ☑️ Acceptance Criteria & Verification
-* [ ] Parse client device timezones and map check-ins using the Night-Owl Grace Period ($W_g = 3$).
-* [ ] Reject duplicate check-ins on the same calendar day gracefully without server errors.
+* [x] Parse client device timezones and map check-ins using the Night-Owl Grace Period ($W_g = 3$).
+* [x] Reject duplicate check-ins on the same calendar day gracefully without server errors.
 
 ---
 
@@ -99,5 +105,24 @@ Develop a passive ingestion adapter to sync steps and sleep records from devices
 Integrate an external audio synthesis API (e.g., ElevenLabs) to synthesize premium voice roasts based on uploaded user audio clips.
 
 #### ☑️ Acceptance Criteria & Verification
-* [ ] Fallback to standard text push notifications if the voice synthesis API fails.
-* [ ] Store audio clone snippets securely using pre-signed secure access tokens.
+* [x] Fallback to standard text push notifications if the voice synthesis API fails.
+* [x] Store audio clone snippets securely using pre-signed secure access tokens.
+
+---
+
+## 🚀 Sprint 4: Production Profiles & API Integration (Completed)
+
+### **STK-401** | Production Profiles & ElevenLabs API Integration
+> **Epic:** Production Readiness & Integrations  
+> **Status:** 🟢 `DONE` | **Priority:** `HIGH`  
+> **Target Files:** [ElevenLabsClient.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/client/ElevenLabsClient.java), [application-prod.properties](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/resources/application-prod.properties), [LockedInController.java](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/src/main/java/com/lockedin/controller/LockedInController.java)
+
+#### 📝 Description & Technical Scope
+Set up environment profiles for dev/prod database routing and replace simulated ElevenLabs calls with real HTTP client calls, securing files via a pre-signed local streaming endpoint.
+
+#### ☑️ Acceptance Criteria & Verification
+* [x] Configure profile application properties (dev H2, prod PostgreSQL with env mappings).
+* [x] Implement ElevenLabsClient with API key and URL configurations.
+* [x] Expose GET `/api/motivation/audio/{clipId}` streaming endpoint with SHA-256 signatures and expiration controls.
+* [x] Implement comprehensive integration test verification validating token validation, expiration, and audio stream response.
+

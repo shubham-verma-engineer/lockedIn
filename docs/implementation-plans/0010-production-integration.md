@@ -125,4 +125,6 @@ The goal is to transition the LockedIn backend from a purely mock-based local se
 
 ## 9. Commits / PR
 
-- Commit/PR: TBA
+- Commit/PR: `787eb66` — Initial implementation plan draft
+- Commit/PR: `d535bed` — Implementation of production database profiles and real ElevenLabs API client integration
+
