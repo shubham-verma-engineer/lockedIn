@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0005 |
-| **Status** | In Progress |
+| **Status** | Done |
 | **Branch** | `feature/notification-action-factory` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -46,7 +46,7 @@ The goal is to implement **`NotificationActionFactory`** as specified in fronten
 
 ## 3. Phases
 
-### Phase 1 — Android SDK Compile-Time Stubs · Status: Pending
+### Phase 1 — Android SDK Compile-Time Stubs · Status: Done
 - **Does:** Create the necessary Android mock/stub classes under `android` and `androidx` packages.
 - **Verify:** Compile stubs successfully.
 - **Changed files:**
@@ -60,7 +60,7 @@ The goal is to implement **`NotificationActionFactory`** as specified in fronten
   | `src/main/java/androidx/core/app/NotificationCompat.java` | NotificationCompat stub (new) |
   | `src/main/java/com/lockedin/client/notification/StreakActionReceiver.java` | Broadcast receiver stub (new) |
 
-### Phase 2 — NotificationActionFactory Core Implementation · Status: Pending
+### Phase 2 — NotificationActionFactory Core Implementation · Status: Done
 - **Does:** Build the `NotificationActionFactory` using the created stubs.
 - **Verify:** Successful Java compilation of the factory.
 - **Changed files:**
@@ -69,7 +69,7 @@ The goal is to implement **`NotificationActionFactory`** as specified in fronten
   |---|---|
   | `src/main/java/com/lockedin/client/notification/NotificationActionFactory.java` | Main Android notification action builder (new) |
 
-### Phase 3 — Unit Testing & Verification · Status: Pending
+### Phase 3 — Unit Testing & Verification · Status: Done
 - **Does:** Write unit tests asserting proper intent action and extra configurations on the generated actions.
 - **Verify:** Run Maven test suite and ensure all tests pass.
 - **Changed files:**
