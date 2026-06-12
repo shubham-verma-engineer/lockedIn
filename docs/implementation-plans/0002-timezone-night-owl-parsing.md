@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Plan #** | 0002 |
-| **Status** | In Progress |
+| **Status** | Done |
 | **Branch** | `feature/night-owl-timezone` |
 | **Author** | Antigravity + Shubham |
 | **Created** | 2026-06-13 |
@@ -36,7 +36,7 @@ The goal is to implement **STK-202**: "Implement Night-Owl Grace Period Offset W
 
 ## 3. Phases
 
-### Phase 1 — Core Timezone Evaluator Implementation · Status: Pending
+### Phase 1 — Core Timezone Evaluator Implementation · Status: Done
 - **Does:** Implement `TimezoneEvaluator` under package `com.lockedin.engine`.
 - **Verify:** Successful compilation of the new Java class.
 - **Changed files:**
@@ -45,7 +45,7 @@ The goal is to implement **STK-202**: "Implement Night-Owl Grace Period Offset W
   |---|---|
   | `src/main/java/com/lockedin/engine/TimezoneEvaluator.java` | Core logic for night-owl timezone processing (new) |
 
-### Phase 2 — Unit Testing & Verification · Status: Pending
+### Phase 2 — Unit Testing & Verification · Status: Done
 - **Does:** Write unit tests to check both edge cases (01:30 AM -> Monday, 04:15 AM -> Tuesday) and safe fallback handling.
 - **Verify:** Run Maven test suite and ensure all tests pass cleanly.
 - **Changed files:**
