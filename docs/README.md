@@ -28,4 +28,7 @@ Welcome to the documentation repository for the **LockedIn Platform**. This dire
    * Budget estimations and AWS hosting resource sizing projections.
 8. **[Production Agile Sprint Task Tickets](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/docs/Sprint_task_tickets.md)**
    * Detailed STK tickets mapping directly to sprint deliverables.
+9. **[Mobile App Deployment Pipeline Specification](file:///Users/shubhamverma/Documents/JavaProjects/startup/lockedIn/docs/Deployment_Pipeline.md)**
+   * Automated fastlane and GitHub Actions CI/CD workflows for iOS & Android publishing.
+
 
