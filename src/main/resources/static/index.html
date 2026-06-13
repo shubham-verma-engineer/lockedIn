@@ -298,12 +298,44 @@
             width: 100%;
             height: 40px;
         }
+
+        @keyframes pulse-shadow {
+            0%, 100% { filter: drop-shadow(0 0 12px rgba(0, 255, 204, 0.25)); }
+            50% { filter: drop-shadow(0 0 25px rgba(0, 255, 204, 0.6)); }
+        }
+
+        .brand-icon-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(0, 255, 204, 0.02), rgba(255, 51, 102, 0.02));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(12px);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .brand-icon-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .brand-icon-img {
+            width: 120px;
+            height: 120px;
+            animation: pulse-shadow 3s infinite ease-in-out;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>LockedIn Dashboard</h1>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <img src="monogram-link.svg" alt="LockedIn Monogram" style="height: 38px; width: auto;">
+                <h1>LockedIn Dashboard</h1>
+            </div>
             <div class="header-stats">
                 <div class="stat-badge active">
                     ⚡ Server Status: Online
@@ -432,6 +464,12 @@
             <!-- Right Side: Synthesizer & Console Logs -->
             <div style="display: flex; flex-direction: column; gap: 2rem;">
                 
+                <!-- Brand Asset 1: The Judgmental Lock Widget Face -->
+                <div class="brand-icon-card">
+                    <img src="judgmental-lock.svg" class="brand-icon-img" alt="The Judgmental Lock">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-state-active); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.75rem; display: block;">The Judgmental Lock</span>
+                </div>
+
                 <!-- Premium Audio Synthesizer -->
                 <div class="card">
                     <h2>AI Voice-Cloning Synthesizer</h2>
