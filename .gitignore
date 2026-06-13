@@ -11,3 +11,10 @@ Thumbs.db
 # Audio runtime outputs
 media/
 
+# IDE configurations
+.idea/
+*.iml
+local.properties
+.expo/
+
+

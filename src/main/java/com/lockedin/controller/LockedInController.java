@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api")
 public class LockedInController {
@@ -40,6 +41,25 @@ public class LockedInController {
         this.timezoneEvaluator = timezoneEvaluator;
     }
 
+    private String normalizeTime(String time) {
+        if (time == null) return "00:00:00";
+        String trimmed = time.trim();
+        if (trimmed.matches("^\\d{1,2}:\\d{2}$")) {
+            String[] parts = trimmed.split(":");
+            int hour = Integer.parseInt(parts[0]);
+            int minute = Integer.parseInt(parts[1]);
+            return String.format("%02d:%02d:00", hour, minute);
+        }
+        if (trimmed.matches("^\\d{1,2}:\\d{2}:\\d{2}$")) {
+            String[] parts = trimmed.split(":");
+            int hour = Integer.parseInt(parts[0]);
+            int minute = Integer.parseInt(parts[1]);
+            int second = Integer.parseInt(parts[2]);
+            return String.format("%02d:%02d:%02d", hour, minute, second);
+        }
+        return trimmed;
+    }
+
     @PostMapping("/streak")
     public ResponseEntity<String> configureStreak(@RequestBody StreakConfigRequest req) {
         String updateSql = "UPDATE app_user_streaks SET " +
@@ -50,7 +70,7 @@ public class LockedInController {
                            "WHERE streak_id = ?;";
 
         int rows = jdbcTemplate.update(updateSql,
-                java.sql.Time.valueOf(req.localScheduledTime()),
+                java.sql.Time.valueOf(normalizeTime(req.localScheduledTime())),
                 req.targetIanaTimezone(),
                 req.customAnchorParagraph(),
                 req.selectedArchetype(),
@@ -64,7 +84,7 @@ public class LockedInController {
                     req.streakId(),
                     req.accountId(),
                     req.activityIdentifier(),
-                    java.sql.Time.valueOf(req.localScheduledTime()),
+                    java.sql.Time.valueOf(normalizeTime(req.localScheduledTime())),
                     req.targetIanaTimezone(),
                     req.customAnchorParagraph(),
                     req.selectedArchetype()
@@ -262,6 +282,78 @@ public class LockedInController {
         );
         String message = motivationEngineRouter.routeAndGenerate(context, userTier);
         return ResponseEntity.ok(message);
+    }
+
+    @GetMapping("/streaks")
+    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getStreaks(@RequestParam(required = false) String accountId) {
+        System.out.println("getStreaks called with accountId: '" + accountId + "'");
+        String sql = "SELECT * FROM app_user_streaks" + (accountId != null ? " WHERE account_id = ?" : "");
+        java.util.List<java.util.Map<String, Object>> list;
+        if (accountId != null) {
+            list = jdbcTemplate.queryForList(sql, accountId);
+        } else {
+            list = jdbcTemplate.queryForList(sql);
+        }
+
+        // For each streak, determine check-in / freeze status for today's logical date
+        for (java.util.Map<String, Object> streak : list) {
+            // H2 keys are returned in uppercase: STREAK_ID, TARGET_IANA_TIMEZONE
+            String streakId = (String) (streak.containsKey("STREAK_ID") ? streak.get("STREAK_ID") : streak.get("streak_id"));
+            String tzId = (String) (streak.containsKey("TARGET_IANA_TIMEZONE") ? streak.get("TARGET_IANA_TIMEZONE") : streak.get("target_iana_timezone"));
+            
+            java.time.LocalDate logicalDate = timezoneEvaluator.getLogicalDate(java.time.Instant.now(), tzId);
+            
+            String logSql = "SELECT execution_state FROM customer_activity_logs WHERE streak_id = ? AND resolved_calendar_date = ?;";
+            try {
+                String state = jdbcTemplate.queryForObject(logSql, String.class, streakId, java.sql.Date.valueOf(logicalDate));
+                streak.put("TODAY_STATE", state); // "COMPLETED" or "FROZEN"
+            } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+                streak.put("TODAY_STATE", "PENDING");
+            }
+        }
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/vault/{accountId}")
+    public ResponseEntity<java.util.Map<String, Object>> getVault(@PathVariable String accountId) {
+        Integer personalTokens = 0;
+        try {
+            personalTokens = jdbcTemplate.queryForObject(
+                "SELECT available_freeze_tokens FROM account_inventory_vault WHERE account_id = ?",
+                Integer.class,
+                accountId
+            );
+        } catch (Exception e) {
+            // Seed a default inventory token if none exists
+            jdbcTemplate.update("INSERT INTO account_inventory_vault (account_id, available_freeze_tokens) VALUES (?, 1);", accountId);
+            personalTokens = 1;
+        }
+
+        String groupId = null;
+        Integer groupTokens = 0;
+        try {
+            groupId = jdbcTemplate.queryForObject(
+                "SELECT group_id FROM group_memberships WHERE account_id = ?",
+                String.class,
+                accountId
+            );
+            if (groupId != null) {
+                groupTokens = jdbcTemplate.queryForObject(
+                    "SELECT available_freeze_tokens FROM group_inventory_vault WHERE group_id = ?",
+                    Integer.class,
+                    groupId
+                );
+            }
+        } catch (Exception e) {
+            // No group membership or vault yet
+        }
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("accountId", accountId);
+        result.put("personalFreezeTokens", personalTokens != null ? personalTokens : 0);
+        result.put("groupId", groupId);
+        result.put("groupFreezeTokens", groupTokens != null ? groupTokens : 0);
+        return ResponseEntity.ok(result);
     }
 }
 
